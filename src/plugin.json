@@ -1,29 +1,26 @@
 {
   "type": "panel",
-  "name": "Grafana Panel Plugin Template",
-  "id": "myorgid-simple-panel",
-
+  "name": "FlameGraph panel",
+  "id": "flamegraph-grafana-panel",
   "info": {
-    "description": "Grafana Panel Plugin Template",
+    "description": "FlameGraph panel",
     "author": {
-      "name": "Your Name"
+      "name": "Ivan Kopeykin <ikopeykin@ozon.ru>"
     },
-    "keywords": ["panel", "template"],
+    "keywords": ["panel", "flamegraph"],
     "logos": {
       "small": "img/logo.svg",
       "large": "img/logo.svg"
     },
     "links": [
-      {"name": "Website", "url": "https://github.com/grafana/simple-react-panel"},
-      {"name": "License", "url": "https://github.com/grafana/simple-react-panel/blob/master/LICENSE"}
+      {"name": "License", "url": "https://github.com/ozonru/flamegraph-grafana-plugin/blob/master/LICENSE"}
     ],
     "screenshots": [],
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },
-
   "dependencies": {
-    "grafanaVersion": "6.3.x",
+    "grafanaVersion": "7.x.x",
     "plugins": []
   }
 }
