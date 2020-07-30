@@ -1,0 +1,26 @@
+{
+  "type": "panel",
+  "name": "FlameGraph panel",
+  "id": "flamegraph-grafana-panel",
+  "info": {
+    "description": "FlameGraph panel",
+    "author": {
+      "name": "Ivan Kopeykin <ikopeykin@ozon.ru>"
+    },
+    "keywords": ["panel", "flamegraph"],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [
+      {"name": "License", "url": "https://github.com/ozonru/flamegraph-grafana-plugin/blob/master/LICENSE"}
+    ],
+    "screenshots": [],
+    "version": "0.1.0",
+    "updated": "2020-07-30"
+  },
+  "dependencies": {
+    "grafanaVersion": "7.x.x",
+    "plugins": []
+  }
+}
