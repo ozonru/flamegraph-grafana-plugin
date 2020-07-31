@@ -18,16 +18,19 @@ class Path {
         value: { service: string; operation: string };
         done: boolean;
       } {
+        if (i === -1) {
+          return { done: true, value: { service: '', operation: '' } };
+        }
+
         let nextOperation = path.lastIndexOf('!', i);
         let nextService = nextOperation > -1 ? path.lastIndexOf(';', nextOperation - 1) : -1;
-        const done = nextService === -1;
         const value = {
           service: path.slice(nextService + 1, nextOperation),
           operation: path.slice(nextOperation + 1, i),
         };
         i = nextService;
         return {
-          done,
+          done: false,
           value,
         };
       },

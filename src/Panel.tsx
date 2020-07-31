@@ -47,6 +47,11 @@ export class FlameGraphPanel extends React.Component<Props> {
       }
     }
 
+    if (seriesA.length === 0) {
+      this.divRef.current.innerText = 'No series';
+      return;
+    }
+
     const fg = flamegraph()
       .width(width)
       .height(height)
