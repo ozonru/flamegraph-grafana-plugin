@@ -67,21 +67,7 @@ export function processSeries(seriesA: DataFrame[], seriesB: DataFrame[]): Span 
         continue;
       }
 
-      let path = '';
-
-      for (const { service, operation } of new Path(valueField.labels.path)) {
-        let name = `${service} ${operation}`;
-        let id = ids.get(name);
-
-        if (!id) {
-          id = j++;
-          ids.set(name, id);
-        }
-
-        path += `${id};`;
-      }
-
-      byIdSeriesA.set(path, value);
+      byIdSeriesA.set(valueField.labels.path, value);
     }
   } else {
     seriesB = seriesA;
@@ -106,6 +92,8 @@ export function processSeries(seriesA: DataFrame[], seriesB: DataFrame[]): Span 
 
     let path = '';
     let last: Span | undefined;
+    const prev = byIdSeriesA.get(valueField.labels.path);
+    const delta = prev ? value - prev : value;
 
     for (const { service, operation } of new Path(valueField.labels.path)) {
       let name = `${service} ${operation}`;
@@ -137,13 +125,7 @@ export function processSeries(seriesA: DataFrame[], seriesB: DataFrame[]): Span 
 
     if (last) {
       last.value = value;
-      const aValue = byIdSeriesA.get(path);
-
-      if (aValue) {
-        last.delta = value - aValue;
-      } else {
-        last.delta = value;
-      }
+      last.delta = delta;
     }
   }
 
