@@ -47,6 +47,8 @@ function createNode(name: string): Span {
 }
 
 export function processSeries(seriesA: DataFrame[], seriesB: DataFrame[]): Span | undefined {
+  /* eslint-disable */
+  debugger
   const byIdSeriesA = new Map();
   const cache = new Map();
   const ids = new Map();
