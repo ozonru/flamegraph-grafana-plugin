@@ -56,7 +56,10 @@ export class FlameGraphPanel extends React.Component<Props> {
       .width(width)
       .height(height)
       .selfValue(true)
-      .differential(seriesB.length > 0);
+      .differential(seriesB.length > 0)
+      .label(
+        node => `${node.name}: ${node.value.toFixed(5)}ms.${node.delta ? `Diff ${node.delta.toFixed(5)}ms.` : ''}`
+      );
     d3.select(this.divRef.current)
       .datum(processSeries(seriesA, seriesB))
       .call(fg);
