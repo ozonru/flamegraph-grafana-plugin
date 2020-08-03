@@ -9,6 +9,8 @@ import 'd3-flame-graph/dist/d3-flamegraph.css';
 
 interface Props extends PanelProps<Options> {}
 
+const MS_IN_SECOND = 1000;
+
 export class FlameGraphPanel extends React.Component<Props> {
   divRef: React.RefObject<HTMLDivElement>;
 
@@ -58,7 +60,10 @@ export class FlameGraphPanel extends React.Component<Props> {
       .selfValue(true)
       .differential(seriesB.length > 0)
       .label(
-        node => `${node.name}: ${node.value.toFixed(5)}ms.${node.delta ? `Diff ${node.delta.toFixed(5)}ms.` : ''}`
+        node =>
+          `${node.name}: ${(node.value * MS_IN_SECOND).toFixed(5)}ms.${
+            node.delta ? `Diff ${(node.delta * MS_IN_SECOND).toFixed(5)}ms.` : ''
+          }`
       );
     d3.select(this.divRef.current)
       .datum(processSeries(seriesA, seriesB))
