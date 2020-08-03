@@ -9486,7 +9486,7 @@ function (_super) {
     }
 
     var fg = Object(d3_flame_graph__WEBPACK_IMPORTED_MODULE_2__["flamegraph"])().width(width).height(height).selfValue(true).differential(seriesB.length > 0).label(function (node) {
-      return node.name + ": " + (node.value * MS_IN_SECOND).toFixed(5) + "ms." + (node.delta ? "Diff " + (node.delta * MS_IN_SECOND).toFixed(5) + "ms." : '');
+      return node.data.name + ": Self value " + (node.data.value * MS_IN_SECOND).toFixed(2) + "ms." + (node.data.delta ? "Diff " + (node.data.delta * MS_IN_SECOND).toFixed(2) + "ms." : '');
     });
     d3__WEBPACK_IMPORTED_MODULE_3__["select"](this.divRef.current).datum(Object(_util__WEBPACK_IMPORTED_MODULE_5__["processSeries"])(seriesA, seriesB)).call(fg);
   };
