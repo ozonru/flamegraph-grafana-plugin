@@ -1,4 +1,5 @@
 import { DataFrame } from '@grafana/data';
+import { Options } from '../types';
 
 interface Span {
   name: string;
@@ -10,32 +11,59 @@ interface Span {
 class Path {
   [Symbol.iterator]: () => Iterator<{ service: string; operation: string }>;
 
-  constructor(path: string) {
-    let i = 0;
+  constructor(path: string, pathFromRootToLeaf: boolean) {
+    if (!pathFromRootToLeaf) {
+      let i = path.length - 1;
 
-    this[Symbol.iterator] = () => ({
-      next(): {
-        value: { service: string; operation: string };
-        done: boolean;
-      } {
-        if (i === path.length) {
-          return { done: true, value: { service: '', operation: '' } };
-        }
+      this[Symbol.iterator] = () => ({
+        next(): {
+          value: { service: string; operation: string };
+          done: boolean;
+        } {
+          if (i === -1) {
+            return { done: true, value: { service: '', operation: '' } };
+          }
 
-        let nextOperation = path.indexOf('!', i);
-        let nextService = path.indexOf(';', nextOperation);
+          let nextOperation = path.lastIndexOf('!', i);
+          let nextService = nextOperation > -1 ? path.lastIndexOf(';', nextOperation - 1) : -1;
+          const value = {
+            service: path.slice(nextService + 1, nextOperation),
+            operation: path.slice(nextOperation + 1, i),
+          };
+          i = nextService;
+          return {
+            done: false,
+            value,
+          };
+        },
+      });
+    } else {
+      let i = 0;
 
-        const value = {
-          service: path.slice(nextOperation + 1, nextService),
-          operation: path.slice(i, nextOperation),
-        };
-        i = nextService + 1;
-        return {
-          done: false,
-          value,
-        };
-      },
-    });
+      this[Symbol.iterator] = () => ({
+        next(): {
+          value: { service: string; operation: string };
+          done: boolean;
+        } {
+          if (i === path.length) {
+            return { done: true, value: { service: '', operation: '' } };
+          }
+
+          let nextOperation = path.indexOf('!', i);
+          let nextService = path.indexOf(';', nextOperation);
+
+          const value = {
+            service: path.slice(nextOperation + 1, nextService),
+            operation: path.slice(i, nextOperation),
+          };
+          i = nextService + 1;
+          return {
+            done: false,
+            value,
+          };
+        },
+      });
+    }
   }
 }
 
@@ -47,7 +75,7 @@ function createNode(name: string): Span {
   };
 }
 
-export function processSeries(seriesA: DataFrame[], seriesB: DataFrame[]): Span | undefined {
+export function processSeries(seriesA: DataFrame[], seriesB: DataFrame[], options: Options): Span | undefined {
   const byIdSeriesA = new Map();
   const cache = new Map();
   const ids = new Map();
@@ -56,7 +84,7 @@ export function processSeries(seriesA: DataFrame[], seriesB: DataFrame[]): Span 
   if (seriesB.length > 0) {
     for (let i = 0; i < seriesA.length; i++) {
       const serie = seriesA[i];
-      const valueField = serie.fields.find(f => f.name === 'Value');
+      const valueField = serie.fields.find((f) => f.name === 'Value');
 
       if (!valueField) {
         continue;
@@ -79,7 +107,7 @@ export function processSeries(seriesA: DataFrame[], seriesB: DataFrame[]): Span 
 
   for (let i = 0; i < seriesB.length; i++) {
     const serie = seriesB[i];
-    const valueField = serie.fields.find(f => f.name === 'Value');
+    const valueField = serie.fields.find((f) => f.name === 'Value');
 
     if (!valueField) {
       continue;
@@ -99,7 +127,7 @@ export function processSeries(seriesA: DataFrame[], seriesB: DataFrame[]): Span 
     const prev = byIdSeriesA.get(valueField.labels.path);
     const delta = prev ? value - prev : value;
 
-    for (const { service, operation } of new Path(valueField.labels.path)) {
+    for (const { service, operation } of new Path(valueField.labels.path, options.pathOrder)) {
       let name = `${service} ${operation}`;
       let id = ids.get(name);
 
