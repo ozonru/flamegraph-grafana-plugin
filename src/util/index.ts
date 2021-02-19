@@ -11,24 +11,25 @@ class Path {
   [Symbol.iterator]: () => Iterator<{ service: string; operation: string }>;
 
   constructor(path: string) {
-    let i = path.length - 1;
+    let i = 0;
 
     this[Symbol.iterator] = () => ({
       next(): {
         value: { service: string; operation: string };
         done: boolean;
       } {
-        if (i === -1) {
+        if (i === path.length) {
           return { done: true, value: { service: '', operation: '' } };
         }
 
-        let nextOperation = path.lastIndexOf('!', i);
-        let nextService = nextOperation > -1 ? path.lastIndexOf(';', nextOperation - 1) : -1;
+        let nextOperation = path.indexOf('!', i);
+        let nextService = path.indexOf(';', nextOperation);
+
         const value = {
-          service: path.slice(nextService + 1, nextOperation),
-          operation: path.slice(nextOperation + 1, i),
+          service: path.slice(nextOperation + 1, nextService),
+          operation: path.slice(i, nextOperation),
         };
-        i = nextService;
+        i = nextService + 1;
         return {
           done: false,
           value,
