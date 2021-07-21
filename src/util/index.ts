@@ -1,10 +1,13 @@
-import { DataFrame } from '@grafana/data';
+import { DataFrame, toFixed } from '@grafana/data';
 import { Options } from '../types';
 
 interface Span {
   name: string;
   value: number;
   delta?: number;
+  perc: number;
+  sum: number;
+  cnt: number;
   children: Span[];
 }
 
@@ -71,11 +74,61 @@ function createNode(name: string): Span {
   return {
     name,
     value: 0.0,
+    perc: 0.0,
+    sum: 0.0,
+    cnt: 0.0,
     children: [],
   };
 }
 
-export function processSeries(seriesA: DataFrame[], seriesB: DataFrame[], options: Options): Span | undefined {
+// returns sum duration
+function countSum(root: Span): number {
+  for (let obj of root.children) {
+    root.sum += countSum(obj);
+  }
+  root.sum += root.value;
+  return root.sum;
+}
+
+function countPercentage(root: Span, total: number) {
+  root.perc = (root.sum * 100) / total;
+  for (let obj of root.children) {
+    countPercentage(obj, total);
+  }
+}
+
+function setCnt(root: Span, cnt: number) {
+  root.cnt = cnt;
+  for (let obj of root.children) {
+    setCnt(obj, cnt);
+  }
+}
+
+function addPercentagesToName(root: Span) {
+  root.name += ' ' + toFixed(root.perc, 1) + '%';
+  for (let obj of root.children) {
+    addPercentagesToName(obj);
+  }
+}
+
+function countTraceCnt(traceCount: DataFrame[]): number {
+  let res = 0.0;
+  for (let i = 0; i < traceCount.length; i++) {
+    const valueField = traceCount[i].fields.find((f) => f.name === 'Value');
+    if (!valueField) {
+      continue;
+    }
+    res += valueField.values.get(0);
+  }
+  return Math.max(1.0, res);
+}
+
+export function processSeries(
+  seriesA: DataFrame[],
+  seriesB: DataFrame[],
+  traceCount: DataFrame[],
+  options: Options
+): Span | undefined {
   const byIdSeriesA = new Map();
   const cache = new Map();
   const ids = new Map();
@@ -161,5 +214,11 @@ export function processSeries(seriesA: DataFrame[], seriesB: DataFrame[], option
     }
   }
 
-  return cache.get('1;');
+  let root = cache.get('1;');
+  let cnt = Math.round(countTraceCnt(traceCount));
+  setCnt(root, cnt);
+  countSum(root);
+  countPercentage(root, root.sum);
+  addPercentagesToName(root);
+  return root;
 }
