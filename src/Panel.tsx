@@ -1,7 +1,7 @@
 import React from 'react';
 import { flamegraph } from 'd3-flame-graph';
 import * as d3 from 'd3';
-import { LoadingState, PanelProps } from '@grafana/data';
+import { LoadingState, PanelProps, toFixed } from '@grafana/data';
 import { Options } from 'types';
 import { processSeries } from './util';
 
@@ -10,6 +10,15 @@ import 'd3-flame-graph/dist/d3-flamegraph.css';
 interface Props extends PanelProps<Options> {}
 
 const MS_IN_SECOND = 1000;
+
+function nsToString(v: number): string {
+  if (v >= MS_IN_SECOND * MS_IN_SECOND) {
+    return toFixed(v / (MS_IN_SECOND * MS_IN_SECOND), 2) + 's';
+  } else if (v >= MS_IN_SECOND) {
+    return toFixed(v / MS_IN_SECOND, 2) + 'ms';
+  }
+  return toFixed(v, 2) + 'ns';
+}
 
 export class FlameGraphPanel extends React.Component<Props> {
   divRef: React.RefObject<HTMLDivElement>;
@@ -37,6 +46,7 @@ export class FlameGraphPanel extends React.Component<Props> {
 
     const seriesA = [];
     const seriesB = [];
+    const traceCount = [];
     const size = data.series.length;
 
     for (let i = 0; i < size; i++) {
@@ -44,6 +54,8 @@ export class FlameGraphPanel extends React.Component<Props> {
 
       if (serie.refId === 'A') {
         seriesA.push(serie);
+      } else if (serie.refId === 'count') {
+        traceCount.push(serie);
       } else {
         seriesB.push(serie);
       }
@@ -61,11 +73,18 @@ export class FlameGraphPanel extends React.Component<Props> {
       .differential(seriesB.length > 0)
       .label(
         (node) =>
-          `${node.data.name}: Self value ${(node.data.value / MS_IN_SECOND).toFixed(2)}ms.${
-            node.data.delta ? `Diff ${(node.data.delta / MS_IN_SECOND).toFixed(2)}ms.` : ''
+          `${node.data.name}:
+mean: ${nsToString(node.data.sum / node.data.cnt)}
+perc: ${toFixed(node.data.perc, 1)}%
+count: ${toFixed(node.data.cnt, 0)}
+sum: ${nsToString(node.data.sum)} ${
+            node.data.delta
+              ? `
+self: ${nsToString(node.data.delta)}`
+              : ''
           }`
       );
-    d3.select(this.divRef.current).datum(processSeries(seriesA, seriesB, this.props.options)).call(fg);
+    d3.select(this.divRef.current).datum(processSeries(seriesA, seriesB, traceCount, this.props.options)).call(fg);
   }
 
   shouldComponentUpdate(nextProps: Readonly<Props>, nextState: Readonly<{}>, nextContext: any): boolean {
